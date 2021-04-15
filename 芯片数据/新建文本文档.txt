@@ -1,0 +1,182 @@
+研究目的：
+本文利用 lncRNA测序结果获得了与***疾病相关的显著差异表达lncRNA和coding gene，基于WGCNA分析结果我们得到了***个与***状态有关联的子网络模块，对模块利用GASS软件计算与***的相关性，我们得到了3个模块在***疾病中显著的up regulated，3个模块中TOP50的基因中筛选到***个core enrichment的lncRNA且全部在***疾病中高表达，我们认为这***个核心高表达的lncRNA与***疾病有显著的关联。
+ 
+1. 材料和方法
+1.1测序材料
+本文共10个测序样本，5个正常样本，5个***疾病样本，取样组织为***组织。
+1.2 测序实验
+实验过程略。见附件。
+1.3 下机数据初步统计
+1.4 测序数据质控
+测序下机的reads会有一些错误的碱基或者质量过低的reads及碱基，我们需要首先对下机的reads进行质量过滤，去除低质量reads，保留下来的clean reads参与后续分析。质控过程：
+a. 去掉reads两端连续质量低于10的碱基
+b. 去掉少于80%的碱基质量大于20的reads
+c. 过滤掉长度小于50nt的reads
+质控过程我们利用fastx_toolkit V0.0.13[1]以及prinseq-liteV 0.20.4工具完成。
+1.5 clean reads统计
+为了直观展示测序的结果的有效性及可靠性，我们需要对raw reads以及clean reads进行包括Q20、reads长度等的统计。
+1.6 reads定位到参考基因组
+利用tophat v2.0.8软件[2]（参数：read最大允许错配碱基数2，read-mismatches=2；read 允许的gap长度为2，read-gap-length=2；最小匹配的碱基数目为8，min-anchor=8；）将clean reads定位到人类参考基因组hg19（UCSC数据库下载的版本）上。
+1.7 获取基因表达量
+利用gencode v24(mapped to GRCh37)[3]数据库提供的已知基因以及lncRNA注释，利用stringtie v1.2.2[4]工具获得基因的fpkm值和read count信息，利用R的edgeR包[5]获得显著差异表达的基因（|log2FC|>1且adjust.pvalue<0.05）。
+1.8基因功能富集分析
+对差异表达基因以及lncRNA的靶基因集合我们利用R的clusterprofiler包[5]进行GO和KEGG富集分析。
+1.9 lncRNA靶基因预测
+利用R的WGCNA包进[6]行WGCNA权重共表达网络分析。我们认为同一个网络模块中的mRNA是lncRNA的潜在靶基因。
+1.10 WGCNA模块与***疾病疾病状态相关性分析
+利用单因素annovar方差分析获得WGCNA的每个网络模块与疾病的相关性。筛选pvalue小于0.05的网络模块，对模块内基因的表达值利用GSAASeqSP[7]计算模块内基因与***疾病疾病状态的相关性。我们选择Nominal p-value小于0.05 的模块，认为他们与***疾病状态显著相关，根据GSAASeqSP提供的core enrichment gene，筛选其中的关键lncRNA，并基于WGCNA子网络模块构建lncRNA的调控网络，利用cytoscape[8]软件图示化展示lncRNA调控网络。
+1.11PPI网络分析
+我们利用STRING [9]在线工具对黄差异表达基因/lncRNA的靶基因进行PPI网络预测，并利用cytosacpe软件图形化PPI网络。利用cytoscape的MCODE[10]插件获得PPI子网络模块。MCODE参数：degree cutoff=5；node score cutoff=0.2；K-Core=2。
+1.12 潜在治疗***疾病药物小分子预测
+我们对筛选出的关键的lncRNA的靶基因，根据其表达值利用cmap网站[11]预测潜在相关的药物小分子。筛选阈值为p value < 0.05。
+2. 结果和结论
+2.1 QC统计
+表1. 测序数据质控结果
+Sample RawReads RawBases raw Q20% CleanReads CleanBases clean rate
+A1_1 35299938 5294990700 99.99 34619743 4604425819 0.980730986
+2.2 clean reads结果统计
+表2. 数据比对结果统计
+sample mapped-reads unique-mapped-reads left mapped reads right mapped reads map rate unique map rate
+A1 59745863 54702271 31953598 27792265 0.908405992 0.831720696
+注：sample为样本名字；mapped-reads为该样本所有比对到参考基因组的reads数目；unique-mapped reads为该样本唯一比对到参考基因组的reads数目；left和right mapped reads分别为双端测序中mapped到参考基因组的reads数目；map rate为reads比对到参考基因组的数目除以该样本全部的clean reads数目；unique mapped rate为唯一比对的reads除以该样本去全部的clean reads数目。
+2.3 lncRNA和coding gene的表达
+我们在全部10个样本中共检测到***个基因在至少一个分组（normal和***疾病）内的全部5个样本中的表达值都大于0，其中***个lncRNA。
+2.4 差异表达分析
+根据设定的差异表达基因筛选阈值共筛选到***疾病相对于normal的显著差异表达基因1398个，其中447个表达下调，951个表达上调。在差异表达基因中有267个为lncRNA，93个下调的lncRNA，174个上调的lncRNA。
+表3 差异表达统计
+group case VS control(all gene) lncRNA
+DOWN 447 93
+UP 951 174
+ALL 1398 267
+
+
+图1. 差异表达基因分布MA图和火山图
+
+
+
+图2. 差异表达基因表达热图（左）以及差异表达lncRNA（右）表达热图，可以看出差异表达基因/lncRNA可以明显的将***疾病和normal分开
+2.5 差异表达基因功能富集分析
+利用R的clusterprofiler包对显著上调和显著下调基因粉笔进行了GO和KEGG富集分析，富集详细结果见附件。图展示了每个ontology的TOP5富集结果。
+
+
+
+图3. 6 显著下调基因（左）和上调基因（右）的富集结果（每个ontology展示pvalue的TOP5见附件）
+2.6 差异表达基因的PPI网络分析
+PPI网络包含 ***条边，***个节点，其中***个下调基因***个上调基因。
+
+
+图4. 差异表达基因的PPI网络（红色为上调绿色为下调，节点大小与连接度成正比。附件黑白图中浅灰色为上调，深灰色为下调）
+表4  PPI网络连接度TOP10的节点：
+#NODE DEGREE
+* 132
+* 93
+* 82
+* 73
+RIPK4 67
+FOS 64
+MYC 59
+ACTA1 58
+ACTA2 55
+EDN1 54
+ 
+2.7 PPI网络模块分析
+利用MCODE插件共对PPI网络获得了***个网络模块，我们对接点数最多的前2个的网络模块进行图形化及功能分析。
+表5 TOP2的PPI模块
+PPI-module node edge
+1 35 287
+2 36 279
+
+
+
+
+
+图5 PPI网络模块（左图从左到右分别为模块1和2，附件包含了黑白图；右图为俩模块的KEGG富集结果比较）
+2.8 WGCNA分析
+对差异表达基因进行WGCNA模块划分，设定每个模块至少包含10个基因。全部的差异表达基因共划分到个***模块，利用单因素anovar分析获得模块与***疾病的相关性。
+表6 WGCNA网络模块与疾病状态关联结果
+Module blue purple salmon darkgreen
+Cor -0.96 -0.85 0.85 0.8
+Pvalue 1.39E-05 0.001720246 0.002040438 0.005160165
+ 
+# Cor代表相关性系数，Pvalue代表检验pvalue
+根据pvalue小于0.01，切相关性系数大于0.7共得到6个模块与***疾病状态显著相关，模块l其中magenta、blue、purple模块与***疾病状态呈负相关，greenyellow、salon、darkgreen和black模块与***疾病状态呈显著正相关。
+我们关注的7个模块内的排名TOP50的基因，7个模块的Top50的基因中都包含lncRNA。
+对模块TOP50的基因除去lncRNA的基因进行代谢通路富集分析。
+对模块中TOP50的基因绘制网络图（见附件，红色为上调，绿色为下调，三角形为lncRNA；黑白图中深灰色为下调，浅灰色为上调）。
+2.9 模块与疾病状态关联分析
+我们利用GSAA V2.0软件对7个模块TOP50的基因与疾病状态的相关性进行检验。
+black、darkgreen、greenyellow和salmon模块与***疾病状态有相关性，其中black模块和darkgreen、greenyellow模块与***疾病的相关性pvalue小于0.05。（4 gene sets are significantly associated at FDR < 25%，3 gene sets are significantly associated at nominal pvalue < 5%）
+表7 ***疾病与gene set关联分析结果
+GeneSets GeneSet size AS(Association Score) NAS(Normalized Association Score) NOM p-val(Nominal p-value)
+BLACK-MODULE-TOP50-GENES 50 -0.79057217 -1.4053822 0.046121594
+DARKGREEN-MODULE-TOP50-GENES 28 -0.6690291 -1.4261122 0.0246085
+GREENYELLOW-MODULE-TOP50-GENES 50 -0.7684096 -1.336246 0.03448276
+SALMON-MODULE-TOP50-GENES 46 -0.61471677 -1.2670702 0.20454545
+（注：我们也用了每个模块的全部基因进行了GSAA的分析，结果仅发现darkgreen模块显著的与***疾病相关（pvalue小于0.05），所以说非TOP50的基因会潜在的影响gene sets与疾病状态的关联结果，由于WGCNA子网络模块符合小世界网络的分布特性，即仅少部分的点拥有大的连通度，这里我们研究连通度TOP50 的hub基因就可以）。
+black模块的TOP50
+
+
+
+
+ 
+图6 black模块（左）和darkgreen（中），greenyellow(右)模块的TOP50 基因的网络图（绿色为下调，三角形形为lncRNA，圆形为普通coding gene，附件有黑白图，深灰色为下调）
+ 
+GSAA关联分析后会提供每个模块的core enrichment gene。
+black模块的关联分析结果中提示35个core enrichment gene其中5个lncRNA: AC009878.2/CTB-174D11.1/KB-1299A7.2/RP11-557H15.4/RP4-534N18.2。
+darkgreen 模块的关联分析结果中提示有12个core enrichment gene 其中没有lncRNA。
+greenyellow模块的关联分析结果中提示有31个core enrichment gene，其中有4个lncRNA：AC061961.2/LINGO1-AS1/RP11-13E1.5/RP11-218M11.3。
+ 
+表8  9个筛选到的在与***疾病状态显著相关的lncRNAs他们的差异表达情况
+lncRNA log2FC logCPM pvlaue FDR
+* 5.230757529 2.083121895 1.23E-28 1.39E-25
+* 4.959007317 -1.251697475 2.88E-10 3.59E-08
+* 3.613105473 2.300656428 1.45E-09 1.49E-07
+KB-1299A7.2 5.680504464 -0.678757759 1.84E-09 1.84E-07
+RP11-13E1.5 4.245943133 -1.436467958 8.18E-09 7.09E-07
+CTB-174D11.1 1.874589108 0.266335164 2.90E-05 0.000871783
+RP11-218M11.3 4.890995306 -2.708525214 0.000165966 0.003699543
+AC009878.2 2.417989552 2.124604895 0.000261556 0.005349191
+RP4-534N18.2 1.213572253 0.336467781 0.003982471 0.041861653
+ 
+2.10 lncRNA调控网络分析
+基于WGCNA子网络模块预测结果，我们构建9个重要lncRNA的潜在靶基因调控网络。
+
+
+图7 重要lncRNA的靶基因调控网络（lncRNA用了黄色的边框，所有红色为上调，绿色为下调，三角为lncNRA，TOP50的基因展示了名字，其他基因没有展示名字，附件有黑白图，浅灰色上调，深灰色下调）
+2.11 重要LncRNA功能分析
+我们对9个lncRNA的潜在靶基因利用R的clusterprofiler包进行功能富集分析。
+
+
+图8  9个lncRNA靶基因的GO BP富集结果
+
+
+图9 9个lncRNA的把基因的GO CC 富集结果
+
+
+图10  9个lncRNA的靶基因的GO MF 富集结果
+black模块的5个core enrichment lncRNA共同调控一个模块内的靶基因，功能上具有协同作用关系。greenyellow模块的有4个core enrichment的lncRNA在功能上也具有协同作用关系。
+2.12 药物小分子预测
+ 
+通过以上的分析我们获得了具有两类功能的9个lncRNA，一类通过上调靶基因来影响神经递质分泌系统（lncRNA为：***、***、***）和另外一类通过调控靶基因上调影响心脏肌肉调控系统（lncRNA：***、***、***），进而导致了患者出现扩张型心肌病。我们对这两类lncRNA的靶基因分别利用cmap预测潜在结合的药物小分子。
+在pvalue小于0.05的条件下，***、***、***的靶基因共筛选到37个潜在结合的药物小分子，其中与***疾病状态正相关的药物小分子（enrichment score大于0）15个，负相关的药物小分子22个（enrichment score小于0）。pvalue从小到大排序取Top10的药物小分子绘制气泡图展示。
+
+
+图11 TOP10的药物小分子预测结果（TOP10中与***疾病状态负相关，即抑制set1基因表达的药物小分子
+ 
+我们再对***、***、***的靶基因利用cmap预测可能结合的药物小分子信息。
+在pvalue小于0.05的条件下，共筛选到82个潜在结合的药物小分子，其中与***疾病状态正相关的药物小分子***个，负相关的***个。pvalue从小到大排序取Top10的药物小分子绘制气泡图展示。
+
+
+图12  TOP10的药物小分子预测结果（TOP10中与***疾病状态负相关，即抑制set2基因表达的药物小分子
+参考文献: 
+1. Schmieder R, Edwards R (2011) Quality con- trol and preprocessing of tagenomic datas- ets. Bioinformatics 27(6):863–864
+2. Trapnell C, Pachter L, Salzberg SL (2009) TopHat: discovering splice junctions with RNA-Seq. Bioinformatics 25(9):1105–1111
+3. Harrow J, Frankish A, Gonzalez JM (2012) GENCODE: the reference human geno annotation for The ENCODE Project. Geno Res 22:1760
+4. Pertea M, Pertea GM, Antonescu CM, Chang TC, ndell JT & Salzberg SL. StringTie enables improved reconstruction of a transcripto from RNA-seq reads Nature Biotechnology 2015, doi:10.1038/nbt.3122
+5. Guangchuang Yu, Li-Gen Wang, Yanyan Han and Qing-Yu He. clusterProfiler: an R package for comparing biological thes among gene clusters. OMICS: A Journal of Integrative Biology 2012, 16(5):284-287
+6. Langfelder P and Horvath S, WGCNA: an R package for weighted correlation network analysis. BMC Bioinformatics 2008, 9:559 doi:10.1186/1471-2105-9-559
+7. Qing Xiong, Nicola Ancona, Elizabeth R. Hauser, Sayan Mukherjee, Terrence S. Furey. Integrating genetic and gene expression evidence into genome-wide association analysis of gene sets. Genome Research. 2012 Feb;22(2):386-97.
+8. Shannon P, Markiel A, Ozier O et al (2003) Cytoscape: a software environnt for inte- grated models of biomolecular interaction net- works. Geno Res 13(11):2498–2504
+9. Franceschini, A. et al. STRING v9.1: protein-protein interaction networks, with increased coverage and integration. Nucleic acids research 41, D808–15 (2013).
+10. Bader GD, Hogue CW. An automated method for finding molecular complexes in large protein interaction networks. BMC Bioinformatics. 2003; 4:2. [PubMed: 12525261]
+11. Lamb, J., et al., The Connectivity Map: using gene-expression signatures to connect small molecules, genes, and disease. Science, 2006. 313(5795): p. 1929-35.
